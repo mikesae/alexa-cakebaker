@@ -1,61 +1,58 @@
 'use strict';
 module.change_code = 1;
-var _ = require('lodash');
-var CAKEBAKER_DATA_TABLE_NAME = 'cakeBakerData';
+const CAKEBAKER_DATA_TABLE_NAME = 'cakeBakerData';
 
-var productionCreds = {
-    region: 'us-east-1',
-    accessKeyId: '',
-    secretAccessKey: ''
-};
-
-var dynasty = require('dynasty')(productionCreds);
-
-// var localUrl = 'http://localhost:4000';
-// var localCredentials = {
+// var productionCreds = {
 //     region: 'us-east-1',
-//     accessKeyId: 'fake',
-//     secretAccessKey: 'fake'
+//     accessKeyId: '',
+//     secretAccessKey: ''
 // };
 //
-// var localDynasty = require('dynasty')(localCredentials, localUrl);
-// var dynasty = localDynasty;
+// var dynasty = require('dynasty')(productionCreds);
 
-function CakeBakerHelper() {
-}
-var cakeBakerTable = function () {
-    return dynasty.table(CAKEBAKER_DATA_TABLE_NAME);
+const localUrl = 'http://localhost:4000';
+const localCredentials = {
+    region: 'us-east-1',
+    accessKeyId: 'fake',
+    secretAccessKey: 'fake'
 };
 
-CakeBakerHelper.prototype.createCakeBakerTable = function () {
-    return dynasty.describe(CAKEBAKER_DATA_TABLE_NAME)
-        .catch(function (error) {
-            return dynasty.create(CAKEBAKER_DATA_TABLE_NAME, {
-                key_schema: {
-                    hash: ['userId', 'string']
-                }
+const localDynasty = require('dynasty')(localCredentials, localUrl);
+const dynasty = localDynasty;
+
+function DatabaseHelper() {
+    const cakeBakerTable = dynasty.table(CAKEBAKER_DATA_TABLE_NAME);
+
+    this.createCakeBakerTable = () => {
+        return dynasty.describe(CAKEBAKER_DATA_TABLE_NAME)
+            .catch(function (error) {
+                return dynasty.create(CAKEBAKER_DATA_TABLE_NAME, {
+                    key_schema: {
+                        hash: ['userId', 'string']
+                    }
+                });
             });
-        });
-};
+    };
 
-CakeBakerHelper.prototype.storeCakeBakerData = function (userId, cakeBakerData) {
-    return cakeBakerTable().insert({
-        userId: userId,
-        data: cakeBakerData
-    }).catch(function (error) {
-        console.log(error);
-    });
-};
-
-CakeBakerHelper.prototype.readCakeBakerData = function (userId) {
-    return cakeBakerTable().find(userId)
-        .then(function (result) {
-            console.log('cakeBakerTable found: ' + JSON.stringify(result));
-            return result;
-        })
-        .catch(function (error) {
+    this.storeCakeBakerData = (userId, cakeBakerData) => {
+        return cakeBakerTable.insert({
+            userId: userId,
+            data: cakeBakerData
+        }).catch(function (error) {
             console.log(error);
         });
-};
+    };
 
-module.exports = CakeBakerHelper;
+    this.readCakeBakerData = userId => {
+        return cakeBakerTable.find(userId)
+            .then(function (result) {
+                console.log('cakeBakerTable found: ' + JSON.stringify(result));
+                return result;
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+    };
+}
+
+module.exports = DatabaseHelper;

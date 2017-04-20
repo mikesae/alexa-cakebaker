@@ -1,30 +1,30 @@
 'use strict';
 module.change_code = 1;
-var _ = require('lodash');
-var Skill = require('alexa-app');
-var CAKE_BAKER_SESSION_KEY = 'cake_baker';
-var skillService = new Skill.app('cakebaker');
-var CakeBakerHelper = require('./cakebaker_helper');
-var DatabaseHelper = require('./database_helper');
-var databaseHelper = new DatabaseHelper();
 
-skillService.pre = function (request, response, type) {
+const Skill = require('alexa-app');
+const CAKE_BAKER_SESSION_KEY = 'cake_baker';
+const skillService = new Skill.app('cakebaker');
+const CakeBakerHelper = require('./cakebaker_helper');
+const DatabaseHelper = require('./database_helper');
+const databaseHelper = new DatabaseHelper();
+
+skillService.pre = () => {
     databaseHelper.createCakeBakerTable();
 };
 
-var getCakeBakerHelper = function (cakeBakerHelperData) {
+const getCakeBakerHelper = cakeBakerHelperData => {
     if (cakeBakerHelperData === undefined) {
         cakeBakerHelperData = {};
     }
     return new CakeBakerHelper(cakeBakerHelperData);
 };
 
-var getCakeBakerHelperFromRequest = function (request) {
-    var cakeBakerHelperData = request.session(CAKE_BAKER_SESSION_KEY);
+const getCakeBakerHelperFromRequest = request => {
+    let cakeBakerHelperData = request.session(CAKE_BAKER_SESSION_KEY);
     return getCakeBakerHelper(cakeBakerHelperData);
 };
 
-var cakeBakerIntentFunction = function (cakeBakerHelper, request, response) {
+const cakeBakerIntentFunction = (cakeBakerHelper, request, response) => {
     console.log(cakeBakerHelper);
     if (cakeBakerHelper.completed()) {
         response.say('Congratulations! Your cake is complete!');
@@ -40,9 +40,8 @@ var cakeBakerIntentFunction = function (cakeBakerHelper, request, response) {
 
 skillService.intent('advanceStepIntent', {
         'utterances': ['{next|advance|continue}']
-    },
-    function (request, response) {
-        var cakeBakerHelper = getCakeBakerHelperFromRequest(request);
+    }, (request, response) => {
+        let cakeBakerHelper = getCakeBakerHelperFromRequest(request);
         cakeBakerHelper.currentStep++;
         saveCake(cakeBakerHelper, request);
         cakeBakerIntentFunction(cakeBakerHelper, request, response);
@@ -50,23 +49,22 @@ skillService.intent('advanceStepIntent', {
 );
 
 skillService.launch(function (request, response) {
-    var prompt = 'Welcome to Cakebaker! To start baking, say bake a cake';
+    let prompt = 'Welcome to Cakebaker! To start baking, say bake a cake';
     response.say(prompt).shouldEndSession(false);
 });
 
 skillService.intent('cakeBakeIntent', {
         'utterances': ['{new|start|create|begin|build} {|a|the} cake']
-    },
-    function (request, response) {
-        var cakeBakerHelper = new CakeBakerHelper({});
+    }, (request, response) => {
+        let cakeBakerHelper = new CakeBakerHelper({});
         cakeBakerIntentFunction(cakeBakerHelper, request, response);
     }
 );
 
 skillService.intent('saveCakeIntent', {
     'utterances': ['{save} {|a|the|my} cake']
-}, function (request, response) {
-    var cakeBakerHelper = getCakeBakerHelperFromRequest(request);
+}, (request, response) => {
+    let cakeBakerHelper = getCakeBakerHelperFromRequest(request);
     saveCake(cakeBakerHelper, request);
     response.say('Your cake progress has been saved!');
     response.shouldEndSession(true).send();
@@ -75,21 +73,21 @@ skillService.intent('saveCakeIntent', {
 
 skillService.intent('loadCakeIntent', {
     'utterances': ['{load|resume} {|a|the} {|last} cake']
-}, function (request, response) {
-    //var userId = request.userId;
-    var userId = request['data']['session']['user']['userId'];
+}, (request, response) => {
+    //let userId = request.userId;
+    let userId = request['data']['session']['user']['userId'];
     databaseHelper.readCakeBakerData(userId).then(function(result) {
         return (result === undefined ? {} : JSON.parse(result['data']));
     }).then(function(data) {
-        var helper = new CakeBakerHelper(data);
+        let helper = new CakeBakerHelper(data);
         return cakeBakerIntentFunction(helper, request, response);
     });
     return false;
 });
 
-var saveCake = function (cakeBakerHelper, request) {
-    //var userId = request.userId;
-    var userId = request['data']['session']['user']['userId'];
+const saveCake = (cakeBakerHelper, request) =>{
+    //let userId = request.userId;
+    let userId = request['data']['session']['user']['userId'];
     databaseHelper.storeCakeBakerData(userId, JSON.stringify(cakeBakerHelper))
         .then(function (result) {
             return result;
@@ -97,6 +95,5 @@ var saveCake = function (cakeBakerHelper, request) {
         console.log(error);
     })
 };
-
 
 module.exports = skillService;
